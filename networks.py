@@ -29,6 +29,10 @@ Update: 2022.04.20.
 import torch.nn as nn
 import torchvision.models as models
 
+
+resnetNumber = '18'
+
+
 class ResExtractor(nn.Module):
     """Feature extractor based on ResNet structure
         Selectable from resnet18 to resnet152
@@ -40,7 +44,7 @@ class ResExtractor(nn.Module):
                     'False' if you want to train from scratch.
     """
 
-    def __init__(self, resnetnum='50', pretrained=True):
+    def __init__(self, resnetnum=resnetNumber, pretrained=True):
         super(ResExtractor, self).__init__()
 
         if resnetnum == '18':
@@ -68,12 +72,21 @@ class Baseline_ResNet_emo(nn.Module):
     def __init__(self):
         super(Baseline_ResNet_emo, self).__init__()
 
-        self.encoder = ResExtractor('18')
+        self.encoder = ResExtractor(resnetNumber)
         self.avg_pool = nn.AvgPool2d(kernel_size=7)
 
-        self.daily_linear = nn.Linear(512, 7)
-        self.gender_linear = nn.Linear(512, 6)
-        self.embel_linear = nn.Linear(512, 3)
+        
+        
+        if resnetNumber == '18' or resnetNumber == '34':
+            self.daily_linear = nn.Linear(512, 7)              
+            self.gender_linear = nn.Linear(512, 6)              
+            self.embel_linear = nn.Linear(512, 3)
+        elif resnetNumber == '50' or resnetNumber == '101' or resnetNumber == '152':
+            self.daily_linear = nn.Linear(2048, 7)              
+            self.gender_linear = nn.Linear(2048, 6)              
+            self.embel_linear = nn.Linear(2048, 3)   
+            
+            
 
     def forward(self, x):
         """ Forward propagation with input 'x' """

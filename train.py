@@ -1,10 +1,4 @@
 '''
-※ 로컬에서 학습을 수행하기 위한 코드입니다. 
-   실제 제출에 사용할 추론코드는 task.ipynb를 사용합니다.
-'''
-
-
-'''
 AI Fashion Coordinator
 (Baseline For Fashion-How Challenge)
 
@@ -43,24 +37,26 @@ import time
 import torch
 import torch.utils.data
 import torch.utils.data.distributed
+from tqdm import tqdm
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--version", type=str, default='Baseline_ResNet_emo')
+parser.add_argument("--version", type=str, default='Baseline_ResNet18_230904')
 parser.add_argument('--epochs', default=100, type=int, metavar='N',
                     help='number of total epochs to run')
 parser.add_argument('--lr', default=0.0001, type=float, metavar='N',
                     help='learning rate')
-parser.add_argument('-b', '--batch-size', default=64, type=int,
+parser.add_argument('-b', '--batch-size', default=16, type=int,
                     metavar='N',
-                    help='mini-batch size (default: 64), this is the total '
+                    help='mini-batch size (default: 256), this is the total '
                          'batch size of all GPUs on the current node when '
                          'using Data Parallel or Distributed Data Parallel')
 parser.add_argument('--seed', default=None, type=int,
                     help='seed for initializing training. ')
 
-a, _ = parser.parse_known_args()
+a = parser.parse_args()
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# DEVICE = torch.device('mps')
 
 def main():
     """ The main function for model training. """
@@ -73,9 +69,9 @@ def main():
 
     net = Baseline_ResNet_emo().to(DEVICE)
 
-    df = pd.read_csv('./Dataset/info_etri20_emotion_train.csv')
+    df = pd.read_csv('./Dataset/Fashion-How23_sub1_train_edit.csv')
     train_dataset = ETRIDataset_emo(df, base_path='./Dataset/Train/')
-    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=a.batch_size, shuffle=True, num_workers=0)
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=a.batch_size, shuffle=True, num_workers=4)
 
     optimizer = torch.optim.Adam(net.parameters(), lr=a.lr)
     criterion = nn.CrossEntropyLoss().to(DEVICE)
@@ -84,10 +80,12 @@ def main():
     step = 0
     t0 = time.time()
 
+
+
     for epoch in range(a.epochs):
         net.train()
-
-        for i, sample in enumerate(train_dataloader):
+        
+        for i, sample in enumerate(tqdm(train_dataloader)):
             optimizer.zero_grad()
             step += 1
             for key in sample:
@@ -112,7 +110,7 @@ def main():
                 t0 = time.time()
 
         if ((epoch + 1) % 10 == 0):
-            a.lr *= 0.9
+            a.lr *= 0.90
             optimizer = torch.optim.Adam(net.parameters(), lr=a.lr)
             print("learning rate is decayed")
 
