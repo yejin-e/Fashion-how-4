@@ -30,8 +30,12 @@ import torch.nn as nn
 import torchvision.models as models
 
 
-resnetNumber = '18'
+resnet_num = '18'
+avgpool_kernel = 5
 
+con_kernel = 3
+stride_num = 2
+padding_num = 3
 
 class ResExtractor(nn.Module):
     """Feature extractor based on ResNet structure
@@ -44,11 +48,12 @@ class ResExtractor(nn.Module):
                     'False' if you want to train from scratch.
     """
 
-    def __init__(self, resnetnum=resnetNumber, pretrained=True):
+    def __init__(self, resnetnum = resnet_num, pretrained=True):
         super(ResExtractor, self).__init__()
 
         if resnetnum == '18':
             self.resnet = models.resnet18(pretrained=pretrained)
+            self.resnet.conv1 = nn.Conv2d(3,64,kernel_size = con_kernel, stride = stride_num, padding = padding_num, bias=False)
         elif resnetnum == '34':
             self.resnet = models.resnet34(pretrained=pretrained)
         elif resnetnum == '50':
@@ -72,21 +77,17 @@ class Baseline_ResNet_emo(nn.Module):
     def __init__(self):
         super(Baseline_ResNet_emo, self).__init__()
 
-        self.encoder = ResExtractor(resnetNumber)
-        self.avg_pool = nn.AvgPool2d(kernel_size=7)
+        self.encoder = ResExtractor('18')
+        self.avg_pool = nn.AvgPool2d(kernel_size = avgpool_kernel)
 
-        
-        
-        if resnetNumber == '18' or resnetNumber == '34':
+        if resnet_num == '18' or resnet_num == '34':
             self.daily_linear = nn.Linear(512, 7)              
             self.gender_linear = nn.Linear(512, 6)              
             self.embel_linear = nn.Linear(512, 3)
-        elif resnetNumber == '50' or resnetNumber == '101' or resnetNumber == '152':
+        elif resnet_num == '50' or resnet_num == '101' or resnet_num == '152':
             self.daily_linear = nn.Linear(2048, 7)              
             self.gender_linear = nn.Linear(2048, 6)              
             self.embel_linear = nn.Linear(2048, 3)   
-            
-            
 
     def forward(self, x):
         """ Forward propagation with input 'x' """

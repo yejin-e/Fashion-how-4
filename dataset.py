@@ -116,12 +116,6 @@ class ETRIDataset_emo(torch.utils.data.Dataset):
         self.to_tensor = transforms.ToTensor()
         self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                               std=[0.229, 0.224, 0.225])
-  
-      
-        # Add augmentation
-        self.flip = transforms.RandomHorizontalFlip(p=1.0)
-        self.brightness = transforms.ColorJitter(brightness=0.5)
-        
 
         # for vis
         self.unnormalize = transforms.Normalize(mean=[-0.485 / 0.229, -0.456 / 0.224, -0.406 / 0.225],
@@ -150,23 +144,13 @@ class ETRIDataset_emo(torch.utils.data.Dataset):
         image_ = self.to_tensor(image_)
         image_ = self.normalize(image_)
         image_ = image_.float()
-        
-        
-        image_flip = self.flip(image_)
-        image_brightness = self.brightness(image_)
-        
-        
+
         ret = {}
-        ret['ori_image'] = image
+        #ret['ori_image'] = image
         ret['image'] = image_
         ret['daily_label'] = daily_label
         ret['gender_label'] = gender_label
         ret['embel_label'] = embel_label
-        
-        
-        ret['image_flip'] = image_flip                  # 전처리된 이미지 + flip
-        ret['image_brightness'] = image_brightness  
-        
 
         return ret
 
